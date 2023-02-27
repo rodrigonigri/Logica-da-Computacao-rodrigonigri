@@ -1,11 +1,10 @@
 import sys
-import re
 
 # get arguments from command line
 args = sys.argv
 
 
-def print_colored(text, color):
+def print_colored(text, color): # so pra debugar
     """Print text in color"""
     if color == "red":
         print("\033[91m {}\033[00m" .format(text))
@@ -26,61 +25,97 @@ def print_colored(text, color):
     else:
         print("\033[99m {}\033[00m" .format(text))
 
-def recebe_conta(conta):
-    resultado = 0
-    lista_temp = []
-    lista_positivos = []
-    lista_negativos = []
+class Token():
+    def _init_(self, type, value): # type is a string, value is a int
+        self.type = type
+        self.value = value 
 
-    # verifica se existe operador no final da string
-    if conta[-1] in "+-":
-        raise Exception ("Erro Sintático")
 
-    # verfica se primeiro caractere é um número
-    if conta[0] not in "0123456789 ":
-        raise Exception ("Erro")
+class Tokenizer():
+    def _init_(self, source):
+        self.source = source
+        self.position = 0
+        self.next = None
 
-    # verifica se existe algum caractere inválido
-    for i in conta:
-        if i not in "0123456789+- ":
-            raise Exception ("Erro Léxico")
+    def selectNext(self):
+        operacoes = "+-"
+        numeros = "0123456789"
 
-    # verifica se existem operadores seguidos
-    for i in range(len(conta)):
-        if conta[i] in "+-":
-            if conta[i+1] in "+-":
-                raise Exception ("Erro Sintático")
+
+        if self.position >= len(self.source):
+            return Token("EOF", None)
         
-    
-
-    # verifica se existe espaço entre dois números
-    if re.search(r"\d\s+\d", conta):
-        raise Exception ("Erro Sintático")
-
-    # manipula a string para separar os números e colocar em uma lista
-    conta_split = conta.split("-")
-    for i in conta_split:
-        var_temp = i.split("+")
-        lista_temp.append(var_temp)
-
-    # soma os números positivos e negativos separando-os em duas listas diferentes
-    for i in range(len(lista_temp)):
-        if i == 0:
-            for j in range(len(lista_temp[i])):
-                lista_positivos.append(int(lista_temp[i][j]))
         else:
-            for j in range(len(lista_temp[i])):
-                if j == 0:
-                    lista_negativos.append(int(lista_temp[i][j]))
-                else:
-                    lista_positivos.append(int(lista_temp[i][j]))
+
+            char = self.source[self.position]
+
+            self.position += 1
+            if char in operacoes:
+                if char == "+":
+                    self.next = Token("PLUS", "+")
+                elif char == "-":
+                    self.next = Token("MINUS", "-")
             
+            elif char in numeros:
+            
+                number = ""
+                while char in numeros:
+                    number += char
+                    char = self.source[self.position]
+                    self.position += 1
 
-    resultado = sum(lista_positivos) - sum(lista_negativos)
+                self.next = Token("INT", int(number))
+                self.position -= 1
 
-    return resultado
+            elif char == " ":
+                self.position += 1
+                self.selectNext()
+
+class Parser():
+    tokenizer = None
+    @staticmethod
+    def parseExpression():
+        token_agora = Parser.tokenizer.next
+        if token_agora.type == "INT":
+            res = token_agora.value
+            Parser.tokenizer.selectNext()
+            token_agora = Parser.tokenizer.next
+
+            while token_agora.type == "PLUS" or token_agora.type == "MINUS":
+                if token_agora.type == "MINUS":
+                    Parser.tokenizer.selectNext()
+                    token_agora = Parser.tokenizer.next
+                    if token_agora.type == "INT":
+                        res -= token_agora.value
+                    else:
+                        raise Exception("Erro de sintaxe")
+
+                elif token_agora.type == "PLUS":
+                    Parser.tokenizer.selectNext()
+                    token_agora = Parser.tokenizer.next
+                    if token_agora.type == "INT":
+                        res += token_agora.value
+                    else:
+                        raise Exception("Erro de sintaxe")
+                
+                Parser.tokenizer.selectNext()
+                token_agora = Parser.tokenizer.next
+            
+            return res
+        
+        else:
+            raise Exception("Erro de sintaxe")
+    @staticmethod
+    def run(codigo):
+        Parser.tokenizer = Tokenizer(codigo)
+        Parser.tokenizer.selectNext()
+        resultado = Parser.parseExpression()
+
+        if Parser.tokenizer.next.type == "EOF":
+            return resultado
+        else:
+            raise Exception("Erro de sintaxe")
         
 
-
-
-print(recebe_conta(args[1]))
+parser = Parser()
+print(parser.run(sys.argv[1]))
