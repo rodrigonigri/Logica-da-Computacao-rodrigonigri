@@ -7,3 +7,9 @@
 
 # Diagrama sintático
 ![diagrama sintatico](https://user-images.githubusercontent.com/62730936/221664792-21d82679-7298-4d3f-b5c1-b5d99e921b8e.png)
+
+# EBNF:
+```
+TERM = NUMBER, {("*"|"/"), NUMBER}
+EXPRESSION = TERM, {("+"|"-"), TERM}
+```
