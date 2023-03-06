@@ -6,4 +6,12 @@
 
 
 # Diagrama sintático
-![diagrama sintatico](https://user-images.githubusercontent.com/62730936/221372631-69aae0a9-a071-4957-bf28-d2fc95236a46.png)
+![diagrama sintatico](https://user-images.githubusercontent.com/62730936/221664792-21d82679-7298-4d3f-b5c1-b5d99e921b8e.png)
+
+# EBNF:
+```
+EXPRESSION = TERM, {("+"|"-"), TERM};
+TERM = NUMBER, {("*"|"/"), NUMBER};
+NUMBER = DIGIT, {DIGIT};
+DIGIT = 0|1|2|3|4|5|6|7|8|9;
+```
