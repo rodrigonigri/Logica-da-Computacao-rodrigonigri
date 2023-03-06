@@ -21,6 +21,15 @@ def print_colored(text, color): # so pra debugar
     else:
         print("\033[99m {}\033[00m" .format(text))
 
+class PrePro():
+    def __init__(self, source):
+        self.source = source
+
+    @staticmethod
+    def filter(source):
+        return source.split("#")[0]
+
+
 class Token():
     def __init__(self, type, value): # type is a string, value is a int
         self.type = type
@@ -35,6 +44,7 @@ class Tokenizer():
 
 
     def selectNext(self):
+        '''Percorre o código fonte e seleciona o próximo token'''
         flag_token = True
 
         try:
@@ -55,18 +65,24 @@ class Tokenizer():
                     self.next = Token("INT", int(numero))
                     return
 
-                if char == " " or char in "+-":
+                if char == " " or char in "+-*/":
                     flag_token = False
                     self.next = Token("INT", int(numero))
                 else:
                     numero += char
 
-        elif char in "+-":
+        elif char in "+-*/":
             if char == "-":
                 self.next = Token("MINUS", "-")
             
             elif char == "+":
                 self.next = Token("PLUS", "+")
+            
+            elif char == "*":
+                self.next = Token("MULT", "*")
+
+            elif char == "/":
+                self.next = Token("DIV", "/")
             
             self.position += 1
             
@@ -79,32 +95,33 @@ class Tokenizer():
 class Parser():
 
     @staticmethod
-    def parseExpression():
+    def parseTerm():
         token_agora = Parser.tokenizer.next
-        res = token_agora.value
 
         if token_agora.type == "INT":
+            res = token_agora.value
             Parser.tokenizer.selectNext()
             token_agora = Parser.tokenizer.next
 
 
-            while token_agora.type == "MINUS" or token_agora.type == "PLUS":
-                if token_agora.type == "MINUS":
+            while token_agora.type == "MULT" or token_agora.type == "DIV":
+                if token_agora.type == "MULT":
                     Parser.tokenizer.selectNext()
                     token_agora = Parser.tokenizer.next
                     if token_agora.type == "INT":
-                        res -= Parser.tokenizer.next.value
+                        res *= Parser.tokenizer.next.value
 
-                    elif token_agora.type != "INT":
+                    else: # se não for um número
                         raise Exception("Erro de sintaxe")
 
-                elif token_agora.type == "PLUS":
+
+                elif token_agora.type == "DIV":
                     Parser.tokenizer.selectNext()
                     token_agora = Parser.tokenizer.next
                     if token_agora.type == "INT":
-                        res += Parser.tokenizer.next.value
+                        res //= Parser.tokenizer.next.value
 
-                    elif token_agora.type != "INT":
+                    else:
                         raise Exception("Erro de sintaxe")
                 
                 Parser.tokenizer.selectNext()
@@ -114,13 +131,35 @@ class Parser():
         
         else:
             raise Exception("Erro de sintaxe")
+
+    @staticmethod
+    def parseExpression():
+        res = Parser.parseTerm()
+        token_agora = Parser.tokenizer.next
+        
+
+        while token_agora.type == "MINUS" or token_agora.type == "PLUS":
+            if token_agora.type == "MINUS":
+                Parser.tokenizer.selectNext()
+                res -= Parser.parseTerm()
+            
+
+            elif token_agora.type == "PLUS":
+                Parser.tokenizer.selectNext()
+                res += Parser.parseTerm()
+            
+            token_agora = Parser.tokenizer.next
+
+        return res
         
 
     @staticmethod
     def run(codigo):
+        codigo = PrePro.filter(codigo)
         Parser.tokenizer = Tokenizer(codigo)
         Parser.tokenizer.selectNext()
         resultado = Parser.parseExpression()
+
 
         if Parser.tokenizer.next.type == "EOF":
             return resultado
