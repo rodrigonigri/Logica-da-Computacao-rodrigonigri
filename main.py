@@ -259,5 +259,8 @@ parser = Parser()
 # get arguments from command line
 args = sys.argv
 
-print(parser.run(args[1]))
+with open(args[1], "r") as f:
+    codigo = f.read()
+
+    print(parser.run(codigo))
 
