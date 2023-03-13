@@ -11,7 +11,7 @@
 # EBNF:
 ```
 EXPRESSION = TERM, {("+"|"-"), TERM};
-TERM = NUMBER, {("*"|"/"), FACTOR};
+TERM = FACTOR, {("*"|"/"), FACTOR};
 FACTOR = ("+"|"-") FACTOR | "(" EXPRESSION ")" | NUMBER
 NUMBER = DIGIT, {DIGIT};
 DIGIT = 0|1|2|3|4|5|6|7|8|9;
