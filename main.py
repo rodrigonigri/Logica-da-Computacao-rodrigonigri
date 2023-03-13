@@ -43,6 +43,7 @@ class Tokenizer():
         self.next = None
 
 
+
     def selectNext(self):
         '''Percorre o código fonte e seleciona o próximo token'''
         flag_token = True
@@ -65,13 +66,13 @@ class Tokenizer():
                     self.next = Token("INT", int(numero))
                     return
 
-                if char == " " or char in "+-*/":
+                if char == " " or char in "+-*/()":
                     flag_token = False
                     self.next = Token("INT", int(numero))
                 else:
                     numero += char
 
-        elif char in "+-*/":
+        elif char in "+-*/()":
             if char == "-":
                 self.next = Token("MINUS", "-")
             
@@ -83,6 +84,13 @@ class Tokenizer():
 
             elif char == "/":
                 self.next = Token("DIV", "/")
+
+            elif char == "(":
+                self.next = Token("OPEN", "(")
+
+            elif char == ")":
+                self.next = Token("CLOSE", ")")
+
             
             self.position += 1
             
@@ -95,42 +103,57 @@ class Tokenizer():
 class Parser():
 
     @staticmethod
-    def parseTerm():
+    def parseFactor():
         token_agora = Parser.tokenizer.next
 
         if token_agora.type == "INT":
             res = token_agora.value
             Parser.tokenizer.selectNext()
+
+        elif token_agora.type == "MINUS":
+            Parser.tokenizer.selectNext()
+            res = (-1) * Parser.parseFactor()
+
+        elif token_agora.type == "PLUS":
+            Parser.tokenizer.selectNext()
+            token_agora = Parser.tokenizer.next
+            res = Parser.parseFactor()
+
+        elif token_agora.type == "OPEN":
+            Parser.tokenizer.selectNext()
+            res = Parser.parseExpression()
             token_agora = Parser.tokenizer.next
 
-
-            while token_agora.type == "MULT" or token_agora.type == "DIV":
-                if token_agora.type == "MULT":
-                    Parser.tokenizer.selectNext()
-                    token_agora = Parser.tokenizer.next
-                    if token_agora.type == "INT":
-                        res *= Parser.tokenizer.next.value
-
-                    else: # se não for um número
-                        raise Exception("Erro de sintaxe")
-
-
-                elif token_agora.type == "DIV":
-                    Parser.tokenizer.selectNext()
-                    token_agora = Parser.tokenizer.next
-                    if token_agora.type == "INT":
-                        res //= Parser.tokenizer.next.value
-
-                    else:
-                        raise Exception("Erro de sintaxe")
-                
-                Parser.tokenizer.selectNext()
-                token_agora = Parser.tokenizer.next
-            
-            return res
+            if token_agora.type != "CLOSE":  
+                raise Exception("Erro de sintaxe: Não fechou o parênteses")
+            Parser.tokenizer.selectNext()
         
         else:
-            raise Exception("Erro de sintaxe")
+            raise Exception("Erro de sintaxe factor")
+        
+        return res
+
+            
+                
+    @staticmethod
+    def parseTerm():
+        res = Parser.parseFactor()
+        token_agora = Parser.tokenizer.next
+        
+
+        while token_agora.type == "MULT" or token_agora.type == "DIV":
+            if token_agora.type == "DIV":
+                Parser.tokenizer.selectNext()
+                res //= Parser.parseFactor()
+            
+
+            elif token_agora.type == "MULT":
+                Parser.tokenizer.selectNext()
+                res *= Parser.parseFactor()
+            
+            token_agora = Parser.tokenizer.next
+
+        return res
 
     @staticmethod
     def parseExpression():
