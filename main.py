@@ -21,6 +21,59 @@ def print_colored(text, color): # so pra debugar
     else:
         print("\033[99m {}\033[00m" .format(text))
 
+class Node():
+    def __init__(self, value, children):
+        self.value = value
+        self.children = children
+
+    def evaluate(self):
+        pass
+
+class UnOp(Node):
+    def __init__(self, value, children):
+        super().__init__(value, children)
+
+    def evaluate(self):
+        if self.value == "-":
+            return -1 * self.children[0].evaluate()
+        
+        elif self.value == "+":
+            return self.children[0].evaluate()
+
+class BinOp(Node):
+    def __init__(self, value, children):
+        super().__init__(value, children)
+
+    def evaluate(self):
+        if self.value == "+":
+            return self.children[0].evaluate() + self.children[1].evaluate()
+
+        elif self.value == "-":
+            return self.children[0].evaluate() - self.children[1].evaluate()
+
+        elif self.value == "*":
+            return self.children[0].evaluate() * self.children[1].evaluate()
+
+        elif self.value == "/":
+            return self.children[0].evaluate() // self.children[1].evaluate()
+        
+
+class IntVal(Node):
+    def __init__(self, value):
+        super().__init__(value, [])
+
+    def evaluate(self):
+        return self.value
+    
+
+class NoOp(Node):
+    def __init__(self):
+        super().__init__(None, [])
+
+    def evaluate(self):
+        pass
+
+
 class PrePro():
     def __init__(self, source):
         self.source = source
@@ -107,20 +160,24 @@ class Parser():
         token_agora = Parser.tokenizer.next
 
         if token_agora.type == "INT":
-            res = token_agora.value
+            #res = token_agora.value
+            res = IntVal(token_agora.value)
             Parser.tokenizer.selectNext()
 
         elif token_agora.type == "MINUS":
             Parser.tokenizer.selectNext()
-            res = (-1) * Parser.parseFactor()
+            res = UnOp("-", [Parser.parseFactor()])
+            #res = (-1) * Parser.parseFactor()
 
         elif token_agora.type == "PLUS":
             Parser.tokenizer.selectNext()
             token_agora = Parser.tokenizer.next
-            res = Parser.parseFactor()
+            res = UnOp("+", [Parser.parseFactor()])
+            #res = Parser.parseFactor()
 
         elif token_agora.type == "OPEN":
             Parser.tokenizer.selectNext()
+            #res = Parser.parseExpression()
             res = Parser.parseExpression()
             token_agora = Parser.tokenizer.next
 
@@ -144,12 +201,14 @@ class Parser():
         while token_agora.type == "MULT" or token_agora.type == "DIV":
             if token_agora.type == "DIV":
                 Parser.tokenizer.selectNext()
-                res //= Parser.parseFactor()
+                #res //= Parser.parseFactor()
+                res = BinOp("/", [res, Parser.parseFactor()])
             
 
             elif token_agora.type == "MULT":
                 Parser.tokenizer.selectNext()
-                res *= Parser.parseFactor()
+                #res *= Parser.parseFactor()
+                res = BinOp("*", [res, Parser.parseFactor()])
             
             token_agora = Parser.tokenizer.next
 
@@ -164,12 +223,14 @@ class Parser():
         while token_agora.type == "MINUS" or token_agora.type == "PLUS":
             if token_agora.type == "MINUS":
                 Parser.tokenizer.selectNext()
-                res -= Parser.parseTerm()
-            
+                #res -= Parser.parseTerm()
+                res = BinOp("-", [res, Parser.parseTerm()])
+        
 
             elif token_agora.type == "PLUS":
                 Parser.tokenizer.selectNext()
-                res += Parser.parseTerm()
+                #res += Parser.parseTerm()
+                res = BinOp("+", [res, Parser.parseTerm()])
             
             token_agora = Parser.tokenizer.next
 
@@ -183,9 +244,11 @@ class Parser():
         Parser.tokenizer.selectNext()
         resultado = Parser.parseExpression()
 
+        evaluate = resultado.evaluate()
+
 
         if Parser.tokenizer.next.type == "EOF":
-            return resultado
+            return evaluate
         
         else:
             raise Exception("Erro de sintaxe")
