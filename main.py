@@ -121,15 +121,19 @@ class SymbolTable(): # chama SymbleTabel.setter("x", 10) pra setar o valor de x 
         return SymbolTable.table[key]
 
 
-
-
 class PrePro():
     def __init__(self, source):
         self.source = source
 
     @staticmethod
     def filter(source):
-        return source.split("#")[0]
+        '''percorre linha a linha removendo os comentários e espaços em branco'''
+        source = source.split("\n")
+        for i in range(len(source)):
+            source[i] = source[i].split("#")[0]
+            source[i] = source[i].strip()
+        source = "\n".join(source)
+        return source
 
 
 class Token():
