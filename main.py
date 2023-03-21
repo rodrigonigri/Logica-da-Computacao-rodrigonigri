@@ -21,6 +21,8 @@ def print_colored(text, color): # so pra debugar
     else:
         print("\033[99m {}\033[00m" .format(text))
 
+reserved_words = ["println"]
+
 class Node():
     def __init__(self, value, children):
         self.value = value
@@ -74,6 +76,53 @@ class NoOp(Node):
         pass
 
 
+class Block(Node):
+    def __init__(self, children):
+        super().__init__(None, children)
+
+    def evaluate(self):
+        for child in self.children:
+            child.evaluate()
+
+
+class Identifier(Node):
+    def __init__(self, value):
+        super().__init__(value, [])
+
+    def evaluate(self):
+        return SymbolTable.getter(self.value)
+    
+
+class Println(Node):
+    def __init__(self, children):
+        super().__init__(None, children)
+
+    def evaluate(self):
+        print(self.children[0].evaluate())
+
+
+class Assignment(Node):
+    def __init__(self, children):
+        super().__init__(None, children)
+
+    def evaluate(self):
+        SymbolTable.setter(self.children[0].value, self.children[1].evaluate())
+
+
+class SymbolTable(): # chama SymbleTabel.setter("x", 10) pra setar o valor de x ou SymbolTable.getter("x") pra pegar o valor de x
+    table = {}
+    def setter(key, value):
+        SymbolTable.table[key] = value
+
+
+    def getter(key):
+        if key not in SymbolTable.table:
+            raise Exception("Variável não declarada")
+        return SymbolTable.table[key]
+
+
+
+
 class PrePro():
     def __init__(self, source):
         self.source = source
@@ -106,8 +155,31 @@ class Tokenizer():
         except:
             self.next = Token("EOF", "")
             return
+        
+        
+        if char in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ": # se for uma letra
+            flag_token = True
+            palavra = ""
+            palavra += char
+            while flag_token: # vai percorrendo letra por letra até encontrar um espaço ou um operador
+                self.position += 1
+                try:
+                    char = self.source[self.position]
+                except:
+                    self.next = Token("ID", palavra)
+                    return
+                
+                if char == " " or char in "=+-*/()": # se for um espaço ou um operador então o token é formado
+                    flag_token = False
+                    if palavra in reserved_words: # se for uma palavra reservada
+                        self.next = Token(palavra.upper(), palavra)
+                    else: 
+                        self.next = Token("ID", palavra)
 
-        if char in "0123456789":
+                else:
+                    palavra += char
+
+        elif char in "0123456789":
             flag_token = True
             numero = ""
             numero += char
@@ -119,13 +191,13 @@ class Tokenizer():
                     self.next = Token("INT", int(numero))
                     return
 
-                if char == " " or char in "+-*/()":
+                if char == " " or char in "+-*/()\n":
                     flag_token = False
                     self.next = Token("INT", int(numero))
                 else:
                     numero += char
 
-        elif char in "+-*/()":
+        elif char in "+-*/()=" or char == "\n":
             if char == "-":
                 self.next = Token("MINUS", "-")
             
@@ -143,6 +215,13 @@ class Tokenizer():
 
             elif char == ")":
                 self.next = Token("CLOSE", ")")
+            
+            elif char == "=":
+                self.next = Token("EQUALS", "=")
+
+            elif char == "\n":
+                self.next = Token("NEWLINE", "\n")
+
 
             
             self.position += 1
@@ -154,6 +233,66 @@ class Tokenizer():
 
 
 class Parser():
+
+    @staticmethod
+    def parseBlock():
+        children = []
+        while Parser.tokenizer.next.type != "EOF":
+            children.append(Parser.parseStatement())
+        return Block(children)
+    
+
+    @staticmethod
+    def parseStatement():
+        token_agora = Parser.tokenizer.next
+        if token_agora.type == "ID":
+            temp = Identifier(token_agora.value)
+            Parser.tokenizer.selectNext()
+            token_agora = Parser.tokenizer.next
+            if token_agora.type == "EQUALS":
+                Parser.tokenizer.selectNext()
+                token_agora = Parser.tokenizer.next
+                res = Assignment([temp, Parser.parseExpression()])
+                #Parser.tokenizer.selectNext()
+                token_agora = Parser.tokenizer.next
+                if token_agora.type == "NEWLINE" or token_agora.type == "EOF":
+                    return res
+                else:
+                    raise Exception("Erro de sintaxe")
+            else:
+                raise Exception("Erro de sintaxe")
+
+        elif token_agora.type == "PRINTLN":
+            Parser.tokenizer.selectNext()
+            token_agora = Parser.tokenizer.next
+            if token_agora.type == "OPEN":
+                Parser.tokenizer.selectNext()
+                token_agora = Parser.tokenizer.next
+                res = Parser.parseExpression()
+                current_token = Parser.tokenizer.next
+                if current_token.type == "CLOSE":
+                    Parser.tokenizer.selectNext()
+                    token_agora = Parser.tokenizer.next
+                    res = Println([res])
+                    #Parser.tokenizer.selectNext()
+                    #token_agora = Parser.tokenizer.next
+                    if token_agora.type == "NEWLINE":
+                        return res
+                    else:
+                        raise Exception("Erro de sintaxe")
+
+                else:
+                    raise Exception("Erro de sintaxe")
+            else:
+                raise Exception("Erro de sintaxe")
+
+        elif token_agora.type == "NEWLINE":
+            Parser.tokenizer.selectNext()
+            return NoOp()
+        
+        else:
+            raise Exception("Erro de sintaxe")
+
 
     @staticmethod
     def parseFactor():
@@ -174,6 +313,11 @@ class Parser():
             token_agora = Parser.tokenizer.next
             res = UnOp("+", [Parser.parseFactor()])
             #res = Parser.parseFactor()
+
+        elif token_agora.type == "ID":
+            res = Identifier(token_agora.value)
+            Parser.tokenizer.selectNext()
+
 
         elif token_agora.type == "OPEN":
             Parser.tokenizer.selectNext()
@@ -242,7 +386,7 @@ class Parser():
         codigo = PrePro.filter(codigo)
         Parser.tokenizer = Tokenizer(codigo)
         Parser.tokenizer.selectNext()
-        resultado = Parser.parseExpression()
+        resultado = Parser.parseBlock()
 
         evaluate = resultado.evaluate()
 
@@ -262,5 +406,9 @@ args = sys.argv
 with open(args[1], "r") as f:
     codigo = f.read()
 
-    print(parser.run(codigo))
+
+    parser.run(codigo)
+
+
+
 
