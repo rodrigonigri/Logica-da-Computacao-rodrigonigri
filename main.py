@@ -133,6 +133,7 @@ class PrePro():
             source[i] = source[i].split("#")[0]
             source[i] = source[i].strip()
         source = "\n".join(source)
+
         return source
 
 
@@ -173,7 +174,7 @@ class Tokenizer():
                     self.next = Token("ID", palavra)
                     return
                 
-                if char == " " or char in "=+-*/()": # se for um espaço ou um operador então o token é formado
+                if char == " " or char in "+-*/()=" or char == "\n": # se for um espaço ou um operador então o token é formado
                     flag_token = False
                     if palavra in reserved_words: # se for uma palavra reservada
                         self.next = Token(palavra.upper(), palavra)
@@ -195,7 +196,7 @@ class Tokenizer():
                     self.next = Token("INT", int(numero))
                     return
 
-                if char == " " or char in "+-*/()\n":
+                if char == " " or char in "+-*/()=" or char == "\n": 
                     flag_token = False
                     self.next = Token("INT", int(numero))
                 else:
@@ -233,6 +234,8 @@ class Tokenizer():
         elif char == " ": # se for um espaço
             self.position += 1
             self.selectNext()
+            
+
         
 
 
@@ -248,23 +251,28 @@ class Parser():
 
     @staticmethod
     def parseStatement():
+
         token_agora = Parser.tokenizer.next
         if token_agora.type == "ID":
-            temp = Identifier(token_agora.value)
+            temp = Identifier(token_agora.value) # possivel erro
             Parser.tokenizer.selectNext()
             token_agora = Parser.tokenizer.next
+
             if token_agora.type == "EQUALS":
                 Parser.tokenizer.selectNext()
                 token_agora = Parser.tokenizer.next
-                res = Assignment([temp, Parser.parseExpression()])
+                res = Assignment([temp, Parser.parseExpression()]) # possivel erro
                 #Parser.tokenizer.selectNext()
+
                 token_agora = Parser.tokenizer.next
+
+                #print(res.children[1].children[0])
                 if token_agora.type == "NEWLINE" or token_agora.type == "EOF":
                     return res
                 else:
-                    raise Exception("Erro de sintaxe")
+                    raise Exception("Erro de sintaxe na declaração de variável")
             else:
-                raise Exception("Erro de sintaxe")
+                raise Exception("Erro de sintaxe na declaração de variável")
 
         elif token_agora.type == "PRINTLN":
             Parser.tokenizer.selectNext()
@@ -304,8 +312,8 @@ class Parser():
 
         if token_agora.type == "INT":
             #res = token_agora.value
-            res = IntVal(token_agora.value)
             Parser.tokenizer.selectNext()
+            res = IntVal(token_agora.value)
 
         elif token_agora.type == "MINUS":
             Parser.tokenizer.selectNext()
@@ -314,13 +322,13 @@ class Parser():
 
         elif token_agora.type == "PLUS":
             Parser.tokenizer.selectNext()
-            token_agora = Parser.tokenizer.next
+            #token_agora = Parser.tokenizer.next
             res = UnOp("+", [Parser.parseFactor()])
             #res = Parser.parseFactor()
 
         elif token_agora.type == "ID":
-            res = Identifier(token_agora.value)
             Parser.tokenizer.selectNext()
+            res = Identifier(token_agora.value)
 
 
         elif token_agora.type == "OPEN":
