@@ -41,7 +41,7 @@ def print_colored(text, color): # so pra debugar
     else:
         print("\033[99m {}\033[00m" .format(text))
 
-reserved_words = ["println", "if", "else", "while", "end", "readln"]
+reserved_words = ["println", "if", "else", "while", "end", "readline"]
 
 class Node():
     def __init__(self, value, children):
@@ -381,27 +381,31 @@ class Parser():
                 raise Exception("Erro de sintaxe na declaração de variável")
 
         elif token_agora.type == "PRINTLN":
+            print_colored(token_agora.type, "blue")
             Parser.tokenizer.selectNext()
             token_agora = Parser.tokenizer.next
+            print_colored(token_agora.type, "blue")
             
             if token_agora.type == "OPEN":
                 Parser.tokenizer.selectNext()
                 token_agora = Parser.tokenizer.next
+                print_colored(token_agora.type, "blue")
+                print_colored(token_agora.value, "blue")
                 
                 res = Parser.parseRelExpression()
                 current_token = Parser.tokenizer.next
                 
                 if current_token.type == "CLOSE":
-                    res = Println([res])
+                    
                     
                     Parser.tokenizer.selectNext()
                     token_agora = Parser.tokenizer.next
+                    res = Println([res])
                     
                     
                     #Parser.tokenizer.selectNext()
                     #token_agora = Parser.tokenizer.next
                     if token_agora.type == "NEWLINE":
-                        
         
                         return res
                     else:
@@ -459,7 +463,7 @@ class Parser():
                         raise Exception("Erro de sintaxe")
             
                 
-            if Parser.tokenizer.next.type == "ELSE":
+            elif Parser.tokenizer.next.type == "ELSE":
                 
                 token_agora = Parser.tokenizer.next
                 Parser.tokenizer.selectNext()
@@ -489,6 +493,8 @@ class Parser():
                     raise Exception("Erro de sintaxe")
             else:
                 raise Exception("Erro de sintaxe") 
+            
+        
         
             
                 
@@ -630,7 +636,7 @@ class Parser():
             token_agora = Parser.tokenizer.next
             
             
-        elif token_agora.type == "READLN":
+        elif token_agora.type == "READLINE":
             Parser.tokenizer.selectNext()
             if Parser.tokenizer.next.type == "OPEN":
                 Parser.tokenizer.selectNext()
