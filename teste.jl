@@ -1,1 +1,1 @@
-println(readline())
+println(1)

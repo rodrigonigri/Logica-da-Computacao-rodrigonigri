@@ -381,16 +381,15 @@ class Parser():
                 raise Exception("Erro de sintaxe na declaração de variável")
 
         elif token_agora.type == "PRINTLN":
-            print_colored(token_agora.type, "blue")
+            
             Parser.tokenizer.selectNext()
             token_agora = Parser.tokenizer.next
-            print_colored(token_agora.type, "blue")
+            
             
             if token_agora.type == "OPEN":
                 Parser.tokenizer.selectNext()
                 token_agora = Parser.tokenizer.next
-                print_colored(token_agora.type, "blue")
-                print_colored(token_agora.value, "blue")
+                
                 
                 res = Parser.parseRelExpression()
                 current_token = Parser.tokenizer.next
@@ -507,7 +506,6 @@ class Parser():
             return NoOp()
         
         else:
-            print(token_agora.type, "#######")
             raise Exception("Erro de sintaxe")
 
     @staticmethod
