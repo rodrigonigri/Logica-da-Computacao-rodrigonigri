@@ -439,59 +439,48 @@ class Parser():
             
         elif token_agora.type == "IF":
             Parser.tokenizer.selectNext()
-            token_agora = Parser.tokenizer.next
             condition = Parser.parseRelExpression()
-            
             if Parser.tokenizer.next.type == "NEWLINE":
-                token_agora = Parser.tokenizer.next
                 lista_if_children = []
+                parser.tokenizer.selectNext()
                 while Parser.tokenizer.next.type != "END" and Parser.tokenizer.next.type != "ELSE":
                     lista_if_children.append(Parser.parseStatement())
-           
-                #Parser.tokenizer.selectNext()
-                token_agora = Parser.tokenizer.next
                 res = If([condition, Block(lista_if_children)])
-                
                 if Parser.tokenizer.next.type == "END":
                     Parser.tokenizer.selectNext()
-                    token_agora = Parser.tokenizer.next
                     if Parser.tokenizer.next.type == "NEWLINE":
                         Parser.tokenizer.selectNext()
-                        token_agora = Parser.tokenizer.next
                     else:
                         raise Exception("Erro de sintaxe")
-            
                 
-            elif Parser.tokenizer.next.type == "ELSE":
-                
-                token_agora = Parser.tokenizer.next
-                Parser.tokenizer.selectNext()
-                token_agora = Parser.tokenizer.next
-                if Parser.tokenizer.next.type == "NEWLINE":
-                    #Parser.tokenizer.selectNext()
-                    token_agora = Parser.tokenizer.next
-                    
-                    lista_else_children = []
-                    while Parser.tokenizer.next.type != "END":
-                        lista_else_children.append(Parser.parseStatement())
-                        
-                    token_agora = Parser.tokenizer.next
-                    res = If([res, Block(lista_if_children), Block(lista_else_children)])
-                    
-                    if Parser.tokenizer.next.type == "END":
+                elif Parser.tokenizer.next.type == "ELSE":
+                    Parser.tokenizer.selectNext()
+                    if Parser.tokenizer.next.type == "NEWLINE":
                         Parser.tokenizer.selectNext()
+                        
+                        lista_else_children = []
+                        while Parser.tokenizer.next.type != "END":
+                            lista_else_children.append(Parser.parseStatement())
+                            
                         token_agora = Parser.tokenizer.next
-                        if Parser.tokenizer.next.type == "NEWLINE":
+                        res = If([res, Block(lista_if_children), Block(lista_else_children)])
+                        
+                        if Parser.tokenizer.next.type == "END":
                             Parser.tokenizer.selectNext()
                             token_agora = Parser.tokenizer.next
+                            if Parser.tokenizer.next.type == "NEWLINE":
+                                Parser.tokenizer.selectNext()
+                                token_agora = Parser.tokenizer.next
+                            else:
+                                raise Exception("Erro de sintaxe")
                         else:
                             raise Exception("Erro de sintaxe")
                     else:
                         raise Exception("Erro de sintaxe")
                 else:
-                    raise Exception("Erro de sintaxe")
+                    raise Exception("Erro de sintaxe") 
             else:
-                raise Exception("Erro de sintaxe") 
+                raise Exception("Erro de sintaxe")
             
         
         

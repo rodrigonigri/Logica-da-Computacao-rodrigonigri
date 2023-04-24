@@ -142,7 +142,12 @@ class Tokenizer():
             
             
 word = """
-println(readline())
+if (2<1) 
+    println(1) 
+else 
+    println(2)
+end
+
 """
             
 prepro = PrePro(word)
