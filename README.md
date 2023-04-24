@@ -6,7 +6,7 @@
 
 
 # Diagrama sintático
-![diagrama sintatico block_statement](https://user-images.githubusercontent.com/62730936/226499200-4905d6f5-4023-4a6b-8d34-f229d47c0f85.png)
+![diagrama sintatico if_while](https://user-images.githubusercontent.com/62730936/234004827-98afa55c-f486-4e13-a62d-3b6e7c98971e.png)
 
 
 # EBNF:
