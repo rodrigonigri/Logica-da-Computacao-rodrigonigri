@@ -1,5 +1,9 @@
-if (2<1) 
-    println(1) 
-else 
-    println(2)
-end
+x::Int
+y::Int
+k::String
+z::String = "oi"
+k = z.z
+println(k)
+x = 1
+y = x || (1==1)
+println(x+y)

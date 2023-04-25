@@ -1,4 +1,4 @@
-a = 1
+a::Int = 1
 while a < 3
     println(a)
     a = a + 1

@@ -41,7 +41,7 @@ def print_colored(text, color): # so pra debugar
     else:
         print("\033[99m {}\033[00m" .format(text))
 
-reserved_words = ["println", "if", "else", "while", "end", "readline"]
+reserved_words = ["println", "if", "else", "while", "end", "readline", "Int", "String"]
 
 class Node():
     def __init__(self, value, children):
@@ -57,45 +57,57 @@ class UnOp(Node):
 
     def evaluate(self):
         if self.value == "-":
-            return -1 * self.children[0].evaluate()
+            return ("Int",-1 * self.children[0].evaluate()[1])
         
         elif self.value == "+":
-            return self.children[0].evaluate()
+            return ("Int",self.children[0].evaluate()[1])
         
         elif self.value == "!":
-            return not self.children[0].evaluate()
+            return ("Int",not self.children[0].evaluate()[1])
 
 class BinOp(Node):
     def __init__(self, value, children):
         super().__init__(value, children)
 
     def evaluate(self):
-        if self.value == "+":
-            return self.children[0].evaluate() + self.children[1].evaluate()
+        
+        if self.value == ".":
+            return ("String", self.children[0].evaluate()[1] + self.children[1].evaluate()[1])
+        
+        else:
+            if self.children[0].evaluate()[0] == "Int" and self.children[1].evaluate()[0] == "Int":
+        
+                if self.value == "+":
+                    return ("Int", self.children[0].evaluate()[1] + self.children[1].evaluate()[1])
 
-        elif self.value == "-":
-            return self.children[0].evaluate() - self.children[1].evaluate()
+                elif self.value == "-":
+                    return ("Int", self.children[0].evaluate()[1] - self.children[1].evaluate()[1])
 
-        elif self.value == "*":
-            return self.children[0].evaluate() * self.children[1].evaluate()
+                elif self.value == "*":
+                    return ("Int", self.children[0].evaluate()[1] * self.children[1].evaluate()[1])
 
-        elif self.value == "/":
-            return self.children[0].evaluate() // self.children[1].evaluate()
+                elif self.value == "/":
+                    return ("Int", self.children[0].evaluate()[1] // self.children[1].evaluate()[1])
+                
+                elif self.value == "==":
+                    return ("Int", self.children[0].evaluate()[1] == self.children[1].evaluate()[1])
+                
+                elif self.value == ">":
+                    return ("Int", self.children[0].evaluate()[1] > self.children[1].evaluate()[1])
+                
+                elif self.value == "<":
+                    return ("Int", self.children[0].evaluate()[1] < self.children[1].evaluate()[1])
+                
+                elif self.value == "||":
+                    return ("Int", self.children[0].evaluate()[1] or self.children[1].evaluate()[1])
+                
+                elif self.value == "&&":
+                    return ("Int", self.children[0].evaluate()[1] and self.children[1].evaluate()[1])
+            
+            else:
+                raise Exception("Type error")
         
-        elif self.value == "==":
-            return self.children[0].evaluate() == self.children[1].evaluate()
         
-        elif self.value == ">":
-            return self.children[0].evaluate() > self.children[1].evaluate()
-        
-        elif self.value == "<":
-            return self.children[0].evaluate() < self.children[1].evaluate()
-        
-        elif self.value == "||":
-            return self.children[0].evaluate() or self.children[1].evaluate()
-        
-        elif self.value == "&&":
-            return self.children[0].evaluate() and self.children[1].evaluate()
          
         
 
@@ -104,7 +116,15 @@ class IntVal(Node):
         super().__init__(value, [])
 
     def evaluate(self):
-        return self.value
+        return ("Int",self.value)
+    
+    
+class StrVal(Node):
+    def __init__(self, value):
+        super().__init__(value, [])
+    
+    def evaluate(self):
+        return ("String",self.value)
     
 
 class NoOp(Node):
@@ -137,7 +157,7 @@ class Println(Node):
         super().__init__(None, children)
 
     def evaluate(self):
-        print(self.children[0].evaluate())
+        print(self.children[0].evaluate()[1])
 
 
 class Assignment(Node):
@@ -153,7 +173,7 @@ class Readln(Node):
         super().__init__(None, children)
 
     def evaluate(self):
-        return int(input())
+        return ("Int",int(input()))
     
 class If(Node):
     def __init__(self, children):
@@ -161,10 +181,10 @@ class If(Node):
 
     def evaluate(self):
         if len(self.children) == 2:
-            if self.children[0].evaluate():
+            if self.children[0].evaluate()[1]:
                 self.children[1].evaluate()
         else:
-            if self.children[0].evaluate():
+            if self.children[0].evaluate()[1]:
                 self.children[1].evaluate()
             else:
                 self.children[2].evaluate()
@@ -174,15 +194,39 @@ class While(Node):
         super().__init__(None, children)
 
     def evaluate(self):
-        while self.children[0].evaluate():
+        while self.children[0].evaluate()[1]:
             self.children[1].evaluate()
+            
+
+class VarDec(Node):
+    def __init__(self, value ,children):
+        super().__init__(value, children)
+        
+    def evaluate(self):
+        SymbolTable.create(self.children[0].value, self.value)
+        SymbolTable.setter(self.children[0].value, self.children[1].evaluate())
+
 
 
 class SymbolTable(): # chama SymbleTabel.setter("x", 10) pra setar o valor de x ou SymbolTable.getter("x") pra pegar o valor de x
     table = {}
     
-    def setter(key, value):
-        SymbolTable.table[key] = value
+    def create(key, type):
+        # verifica se a variável já foi declarada
+        if key in SymbolTable.table:
+            raise Exception("Variável já declarada")
+        SymbolTable.table[key] = (type, None)
+        
+    
+    def setter(key, value_tuple):
+        #verifica se a variável já foi declarada
+        if key not in SymbolTable.table:
+            raise Exception("Variável não declarada")
+        #verifica se o tipo da variável é o mesmo do valor que está sendo atribuído
+        if SymbolTable.table[key][0] != value_tuple[0]:
+            raise Exception("Tipos incompatíveis")
+        #atribui o valor
+        SymbolTable.table[key] = value_tuple
 
 
     def getter(key):
@@ -224,6 +268,7 @@ class Tokenizer():
     def selectNext(self):
         '''Percorre o código fonte e seleciona o próximo token'''
         flag_token = True
+        
 
         try:
             char = self.source[self.position]
@@ -244,15 +289,37 @@ class Tokenizer():
                     self.next = Token("ID", palavra)
                     return
                 
-                if char == " " or char in "+-*/()=<>|&!" or char == "\n": # se for um espaço ou um operador então o token é formado
+                if char == " " or char in "+-*/()=<>|&!:." or char == "\n": # se for um espaço ou um operador então o token é formado
                     flag_token = False
                     if palavra in reserved_words: # se for uma palavra reservada
-                        self.next = Token(palavra.upper(), palavra)
+                        if palavra == "Int" or palavra == "String":
+                            self.next = Token("TYPE", palavra)
+                        else:
+                            self.next = Token(palavra.upper(), palavra)
                     else: 
                         self.next = Token("ID", palavra)
 
                 else:
                     palavra += char
+                    
+        ### STRING ###
+        elif char == '"':
+            flag_token = True
+            palavra = ""
+            while flag_token:
+                self.position += 1
+                try:
+                    char = self.source[self.position]
+                    if char == '"':
+                        flag_token = False
+                    else:
+                        palavra += char
+                except:
+                    raise Exception("String não fechada")
+                
+            self.position += 1
+            self.next = Token("STRING", palavra)
+            
 
         elif char in "0123456789":
             flag_token = True
@@ -266,13 +333,13 @@ class Tokenizer():
                     self.next = Token("INT", int(numero))
                     return
 
-                if char == " " or char in "+-*/()=<>|&!" or char == "\n": 
+                if char == " " or char in "+-*/()=<>|&!:." or char == "\n": 
                     flag_token = False
                     self.next = Token("INT", int(numero))
                 else:
                     numero += char
 
-        elif char in "+-*/()=<>|&!" or char == "\n":
+        elif char in "+-*/()=<>|&!:." or char == "\n":
             if char == "-":
                 self.next = Token("MINUS", "-")
             
@@ -302,6 +369,13 @@ class Tokenizer():
                 else:
                     self.next = Token("ASSIGN", "=")
                     
+            elif char == ":":
+                if self.source[self.position + 1] == ":":
+                    self.next = Token("DECLARATOR", "::")
+                    self.position += 1
+                else:
+                    raise Exception("Erro Lexico")
+                    
             elif char == "<":
                 self.next = Token("LESS", "<")
                 
@@ -325,12 +399,16 @@ class Tokenizer():
             elif char == "!":
                 self.next = Token("NOT", "!")
                 
+            elif char == ".":
+                self.next = Token("CONCAT", ".")
+                
             
             self.position += 1
             
         elif char == " ": # se for um espaço
             self.position += 1
             self.selectNext()
+            
             
             
         
@@ -356,7 +434,36 @@ class Parser():
             Parser.tokenizer.selectNext()
             token_agora = Parser.tokenizer.next
             
-
+            if token_agora.type == "DECLARATOR":
+                Parser.tokenizer.selectNext()
+                token_agora = Parser.tokenizer.next
+                
+                if token_agora.type == "TYPE":
+                    varType = Parser.tokenizer.next.value
+                    Parser.tokenizer.selectNext()
+                    token_agora = Parser.tokenizer.next
+                    
+                    if token_agora.type == "ASSIGN":
+                        Parser.tokenizer.selectNext()
+                        token_agora = Parser.tokenizer.next
+                        res = VarDec(varType, [temp, Parser.parseRelExpression()])
+                        token_agora = Parser.tokenizer.next
+                    else:
+                        if varType == "Int":
+                            res = VarDec(varType, [temp, IntVal(0)])
+                        elif varType == "String":
+                            res = VarDec(varType, [temp, StrVal("")])
+                            
+                    if token_agora.type == "NEWLINE" or token_agora.type == "EOF":
+                        Parser.tokenizer.selectNext()
+                        token_agora = Parser.tokenizer.next
+                        
+                        return res
+                        
+                        
+                else:
+                    raise Exception("Erro de sintaxe na declaração de variável")
+            
             if token_agora.type == "ASSIGN":
 
                 Parser.tokenizer.selectNext()
@@ -528,7 +635,7 @@ class Parser():
         
         
 
-        while token_agora.type == "MINUS" or token_agora.type == "PLUS" or token_agora.type == "OR":
+        while token_agora.type == "MINUS" or token_agora.type == "PLUS" or token_agora.type == "OR" or token_agora.type == "CONCAT":
             if token_agora.type == "MINUS":
                 Parser.tokenizer.selectNext()
                 res = BinOp("-", [res, Parser.parseTerm()])
@@ -540,6 +647,10 @@ class Parser():
             elif token_agora.type == "OR":
                 Parser.tokenizer.selectNext()
                 res = BinOp("||", [res, Parser.parseTerm()])
+                
+            elif token_agora.type == "CONCAT":
+                Parser.tokenizer.selectNext()
+                res = BinOp(".", [res, Parser.parseTerm()])
             
             token_agora = Parser.tokenizer.next
             
@@ -585,6 +696,11 @@ class Parser():
 
             Parser.tokenizer.selectNext()
             res = IntVal(token_agora.value)
+            
+        elif token_agora.type == "STRING":
+            
+            Parser.tokenizer.selectNext()
+            res = StrVal(token_agora.value)
 
         elif token_agora.type == "MINUS":
 

@@ -1,4 +1,4 @@
-reserved_words = ["println", "if", "else", "while", "end", "readln"]
+reserved_words = ["println", "if", "else", "while", "end", "readline", "Int", "String"]
 
 class PrePro():
     def __init__(self, source):
@@ -52,15 +52,37 @@ class Tokenizer():
                     self.next = Token("ID", palavra)
                     return
                 
-                if char == " " or char in "+-*/()=<>|&!" or char == "\n": # se for um espaço ou um operador então o token é formado
+                if char == " " or char in "+-*/()=<>|&!:." or char == "\n": # se for um espaço ou um operador então o token é formado
                     flag_token = False
                     if palavra in reserved_words: # se for uma palavra reservada
-                        self.next = Token(palavra.upper(), palavra)
+                        if palavra == "Int" or palavra == "String":
+                            self.next = Token("TYPE", palavra)
+                        else:
+                            self.next = Token(palavra.upper(), palavra)
                     else: 
                         self.next = Token("ID", palavra)
 
                 else:
                     palavra += char
+                    
+        ### STRING ###
+        elif char == '"':
+            flag_token = True
+            palavra = ""
+            while flag_token:
+                self.position += 1
+                try:
+                    char = self.source[self.position]
+                    if char == '"':
+                        flag_token = False
+                    else:
+                        palavra += char
+                except:
+                    raise Exception("String não fechada")
+                
+            self.position += 1
+            self.next = Token("STRING", palavra)
+            
 
         elif char in "0123456789":
             flag_token = True
@@ -74,13 +96,13 @@ class Tokenizer():
                     self.next = Token("INT", int(numero))
                     return
 
-                if char == " " or char in "+-*/()=<>|&!" or char == "\n": 
+                if char == " " or char in "+-*/()=<>|&!:." or char == "\n": 
                     flag_token = False
                     self.next = Token("INT", int(numero))
                 else:
                     numero += char
 
-        elif char in "+-*/()=<>|&!" or char == "\n":
+        elif char in "+-*/()=<>|&!:." or char == "\n":
             if char == "-":
                 self.next = Token("MINUS", "-")
             
@@ -110,6 +132,13 @@ class Tokenizer():
                 else:
                     self.next = Token("ASSIGN", "=")
                     
+            elif char == ":":
+                if self.source[self.position + 1] == ":":
+                    self.next = Token("DECLARATOR", "::")
+                    self.position += 1
+                else:
+                    raise Exception("Erro Lexico")
+                    
             elif char == "<":
                 self.next = Token("LESS", "<")
                 
@@ -133,6 +162,9 @@ class Tokenizer():
             elif char == "!":
                 self.next = Token("NOT", "!")
                 
+            elif char == ".":
+                self.next = Token("CONCAT", ".")
+                
             
             self.position += 1
             
@@ -142,11 +174,12 @@ class Tokenizer():
             
             
 word = """
-if (2<1) 
-    println(1) 
-else 
-    println(2)
-end
+x::Int
+y::Int
+z::String = "oi"
+x = 1
+y = x || (1==1)
+println(x+y)
 
 """
             
