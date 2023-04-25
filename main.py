@@ -72,7 +72,14 @@ class BinOp(Node):
     def evaluate(self):
         
         if self.value == ".":
-            return ("String", self.children[0].evaluate()[1] + self.children[1].evaluate()[1])
+            return ("String", str(self.children[0].evaluate()[1]) + str(self.children[1].evaluate()[1]))
+        elif self.value == "==":
+                    return ("Int", int(self.children[0].evaluate()[1] == self.children[1].evaluate()[1]))
+        elif self.value == ">":
+                    return ("Int", int(self.children[0].evaluate()[1] > self.children[1].evaluate()[1]))
+                
+        elif self.value == "<":
+            return ("Int", int(self.children[0].evaluate()[1] < self.children[1].evaluate()[1]))
         
         else:
             if self.children[0].evaluate()[0] == "Int" and self.children[1].evaluate()[0] == "Int":
@@ -89,20 +96,13 @@ class BinOp(Node):
                 elif self.value == "/":
                     return ("Int", self.children[0].evaluate()[1] // self.children[1].evaluate()[1])
                 
-                elif self.value == "==":
-                    return ("Int", self.children[0].evaluate()[1] == self.children[1].evaluate()[1])
                 
-                elif self.value == ">":
-                    return ("Int", self.children[0].evaluate()[1] > self.children[1].evaluate()[1])
-                
-                elif self.value == "<":
-                    return ("Int", self.children[0].evaluate()[1] < self.children[1].evaluate()[1])
                 
                 elif self.value == "||":
-                    return ("Int", self.children[0].evaluate()[1] or self.children[1].evaluate()[1])
+                    return ("Int", int(self.children[0].evaluate()[1] or self.children[1].evaluate()[1]))
                 
                 elif self.value == "&&":
-                    return ("Int", self.children[0].evaluate()[1] and self.children[1].evaluate()[1])
+                    return ("Int", int(self.children[0].evaluate()[1] and self.children[1].evaluate()[1]))
             
             else:
                 raise Exception("Type error")
@@ -184,7 +184,7 @@ class If(Node):
             if self.children[0].evaluate()[1]:
                 self.children[1].evaluate()
         else:
-            if self.children[0].evaluate()[1]:
+            if self.children[0].evaluate():
                 self.children[1].evaluate()
             else:
                 self.children[2].evaluate()
