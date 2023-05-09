@@ -266,6 +266,8 @@ class If(Node):
             AssemblyHandler.write(f"CMP EBX, 0")
             AssemblyHandler.write(f"JE ELSE_{self.id}")
             self.children[1].evaluate()
+            AssemblyHandler.write(f"ELSE_{self.id}:")
+                            
             
             
             #if self.children[0].evaluate()[1]:
