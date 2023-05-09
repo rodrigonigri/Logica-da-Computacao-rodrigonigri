@@ -43,17 +43,34 @@ def print_colored(text, color): # so pra debugar
 
 reserved_words = ["println", "if", "else", "while", "end", "readline", "Int", "String"]
 
+class AssemblyHandler():
+    def write(text):
+        filename = args[1].split(".")[0]
+        with open(f"{filename}.asm", "r") as file:
+            whole_file = file.read()
+        with open(f"{filename}.asm", "w") as file:
+            file.write(whole_file)
+            file.write(text + "\n")
+            
+
 class Node():
+    i = 0
+    
     def __init__(self, value, children):
         self.value = value
         self.children = children
 
     def evaluate(self):
         pass
+    
+    def new_id(self):
+        Node.i += 1
+        return Node.i
 
 class UnOp(Node):
     def __init__(self, value, children):
         super().__init__(value, children)
+        self.id = self.new_id()
 
     def evaluate(self):
         if self.value == "-":
@@ -68,60 +85,110 @@ class UnOp(Node):
 class BinOp(Node):
     def __init__(self, value, children):
         super().__init__(value, children)
+        self.id = self.new_id()
 
     def evaluate(self):
+        operator = ""
         
+        self.children[0].evaluate()
+        AssemblyHandler.write("PUSH EBX")
+        self.children[1].evaluate()
+        AssemblyHandler.write("POP EAX")
+        
+        if self.value in "+-*/":
+            if self.value == "+":
+                operator = "ADD"
+
+            elif self.value == "-":
+                operator = "SUB"
+
+            elif self.value == "*":
+                operator = "IMUL"
+
+            elif self.value == "/":
+                operator = "IDIV"
+            
+            elif self.value == "||":
+                operator = "OR"
+                
+            elif self.value == "&&":    
+                operator = "AND"
+            
+            AssemblyHandler.write(f"{operator} EAX, EBX")
+            AssemblyHandler.write("MOV EBX, EAX")
+            
+        elif self.value in ['>','<','==']:
+            if self.value == "==":
+                operator = "binop_je"
+            elif self.value == ">":
+                operator = "binop_jg"
+            elif self.value == "<":
+                operator = "binop_jl"
+            
+            AssemblyHandler.write(f"CMP EAX, EBX")
+            AssemblyHandler.write(f"CALL {operator}")
+            
+        '''
         if self.value == ".":
             return ("String", str(self.children[0].evaluate()[1]) + str(self.children[1].evaluate()[1]))
         elif self.value == "==":
-                    return ("Int", int(self.children[0].evaluate()[1] == self.children[1].evaluate()[1]))
+            operator = "CMP"
+            return ("Int", int(self.children[0].evaluate()[1] == self.children[1].evaluate()[1]))
         elif self.value == ">":
-                    return ("Int", int(self.children[0].evaluate()[1] > self.children[1].evaluate()[1]))
-                
+            operator
+            return ("Int", int(self.children[0].evaluate()[1] > self.children[1].evaluate()[1]))
         elif self.value == "<":
             return ("Int", int(self.children[0].evaluate()[1] < self.children[1].evaluate()[1]))
         
         else:
             if self.children[0].evaluate()[0] == "Int" and self.children[1].evaluate()[0] == "Int":
-        
+                
                 if self.value == "+":
+                    operator = "ADD"
                     return ("Int", self.children[0].evaluate()[1] + self.children[1].evaluate()[1])
 
                 elif self.value == "-":
+                    operator = "SUB"
                     return ("Int", self.children[0].evaluate()[1] - self.children[1].evaluate()[1])
 
                 elif self.value == "*":
+                    operator = "MUL"
                     return ("Int", self.children[0].evaluate()[1] * self.children[1].evaluate()[1])
 
                 elif self.value == "/":
+                    operator = "DIV"
                     return ("Int", self.children[0].evaluate()[1] // self.children[1].evaluate()[1])
                 
                 
                 
                 elif self.value == "||":
+                    operator = "OR"
                     return ("Int", int(self.children[0].evaluate()[1] or self.children[1].evaluate()[1]))
-                
                 elif self.value == "&&":
+                    operator = "AND"
                     return ("Int", int(self.children[0].evaluate()[1] and self.children[1].evaluate()[1]))
+                
+                
+                AssemblyHandler.write(f"{operator} EAX, EBX;")
+                AssemblyHandler.write("MOV EBX, EAX;")
             
             else:
                 raise Exception("Type error")
-        
-        
-         
-        
+                '''
 
 class IntVal(Node):
     def __init__(self, value):
         super().__init__(value, [])
+        self.id = self.new_id()
 
     def evaluate(self):
-        return ("Int",self.value)
+        AssemblyHandler.write(f"MOV EBX, {str(self.value)}")
     
     
 class StrVal(Node):
     def __init__(self, value):
         super().__init__(value, [])
+        self.id = self.new_id()
     
     def evaluate(self):
         return ("String",self.value)
@@ -130,6 +197,7 @@ class StrVal(Node):
 class NoOp(Node):
     def __init__(self):
         super().__init__(None, [])
+        self.id = self.new_id()
 
     def evaluate(self):
         pass
@@ -138,6 +206,7 @@ class NoOp(Node):
 class Block(Node):
     def __init__(self, children):
         super().__init__(None, children)
+        self.id = self.new_id()
 
     def evaluate(self):
         for child in self.children:
@@ -147,30 +216,41 @@ class Block(Node):
 class Identifier(Node):
     def __init__(self, value):
         super().__init__(value, [])
+        self.id = self.new_id()
 
     def evaluate(self):
-        return SymbolTable.getter(self.value)
+        AssemblyHandler.write(f"MOV EBX, [EBP{SymbolTable.getter(self.value)[2]}]")
     
 
 class Println(Node):
     def __init__(self, children):
         super().__init__(None, children)
+        self.id = self.new_id()
 
     def evaluate(self):
-        print(self.children[0].evaluate()[1])
+        #print(self.children[0].evaluate()[1])
+        self.children[0].evaluate()
+        AssemblyHandler.write("PUSH EBX")
+        AssemblyHandler.write("CALL print")
+        AssemblyHandler.write("POP EBX")
+        
 
 
 class Assignment(Node):
     def __init__(self, children):
         super().__init__(None, children)
+        self.id = self.new_id()
 
     def evaluate(self):
-        SymbolTable.setter(self.children[0].value, self.children[1].evaluate())
         
+        #SymbolTable.setter(self.children[0].value, self.children[1].evaluate())
+        self.children[1].evaluate()
+        AssemblyHandler.write(f"MOV [EBP{SymbolTable.getter(self.children[0].value)[2]}], EBX")
         
 class Readln(Node):
     def __init__(self, children):
         super().__init__(None, children)
+        self.id = self.new_id()
 
     def evaluate(self):
         return ("Int",int(input()))
@@ -178,44 +258,73 @@ class Readln(Node):
 class If(Node):
     def __init__(self, children):
         super().__init__(None, children)
+        self.id = self.new_id()
 
     def evaluate(self):
-        if len(self.children) == 2:
-            if self.children[0].evaluate()[1]:
-                self.children[1].evaluate()
-        else:
-            if self.children[0].evaluate():
-                self.children[1].evaluate()
-            else:
-                self.children[2].evaluate()
+        if len(self.children) == 2: #if without else
+            self.children[0].evaluate()
+            AssemblyHandler.write(f"CMP EBX, 0")
+            AssemblyHandler.write(f"JE ELSE_{self.id}")
+            self.children[1].evaluate()
+            
+            
+            #if self.children[0].evaluate()[1]:
+            #    self.children[1].evaluate()
+        else: #if with else
+            self.children[0].evaluate()
+            AssemblyHandler.write(f"CMP EBX, 0")
+            AssemblyHandler.write(f"JE ELSE_{self.id}")
+            self.children[1].evaluate()
+            AssemblyHandler.write(f"JMP EXIT_{self.id}")
+            AssemblyHandler.write(f"ELSE_{self.id}:")
+            self.children[2].evaluate()
+            AssemblyHandler.write(f"EXIT_{self.id}:")
+            
+            #if self.children[0].evaluate():
+            #    self.children[1].evaluate()
+            #else:
+            #    self.children[2].evaluate()
                 
 class While(Node):
     def __init__(self, children):
         super().__init__(None, children)
+        self.id = self.new_id()
 
     def evaluate(self):
-        while self.children[0].evaluate()[1]:
-            self.children[1].evaluate()
+        AssemblyHandler.write(f"LOOP_{self.id}:")
+        self.children[0].evaluate()
+        AssemblyHandler.write(f"CMP EBX, 0")
+        AssemblyHandler.write(f"JE EXIT_{self.id}")
+        self.children[1].evaluate()
+        AssemblyHandler.write(f"JMP LOOP_{self.id}")
+        AssemblyHandler.write(f"EXIT_{self.id}:")
+        
+        #while self.children[0].evaluate()[1]:
+        #    self.children[1].evaluate()
             
 
 class VarDec(Node):
     def __init__(self, value ,children):
         super().__init__(value, children)
+        self.id = self.new_id()
         
     def evaluate(self):
-        SymbolTable.create(self.children[0].value, self.value)
-        SymbolTable.setter(self.children[0].value, self.children[1].evaluate())
+        SymbolTable.create(self.children[0].value, self.value, (-4) * (len(SymbolTable.table) + 1))
+        AssemblyHandler.write(f"PUSH DWORD 0")
+        #SymbolTable.setter(self.children[0].value, self.children[1].evaluate())
+        self.children[-1].evaluate()
+        AssemblyHandler.write(f"MOV [EBP{SymbolTable.getter(self.children[0].value)[2]}], EBX")
 
 
 
 class SymbolTable(): # chama SymbleTabel.setter("x", 10) pra setar o valor de x ou SymbolTable.getter("x") pra pegar o valor de x
     table = {}
     
-    def create(key, type):
+    def create(key, type, shift):
         # verifica se a variável já foi declarada
         if key in SymbolTable.table:
             raise Exception("Variável já declarada")
-        SymbolTable.table[key] = (type, None)
+        SymbolTable.table[key] = (type, None, shift)
         
     
     def setter(key, value_tuple):
@@ -782,5 +891,9 @@ args = sys.argv
 
 with open(args[1], "r") as f:
     codigo = f.read()
+    # create new file args[1].split(".")[0] + ".asm" file
+    with open(args[1].split(".")[0] + ".asm", "w") as f:
+        pass
     parser.run(codigo)
+    
 
