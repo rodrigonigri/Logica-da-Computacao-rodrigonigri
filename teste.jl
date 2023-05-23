@@ -1,26 +1,16 @@
-    # v2.2 testing
-    x_1::Int
-    
-    x_1 = readline()
-    if ((x_1 > 1) && !(x_1 < 1)) 
-        x_1 = 3
-    
-    else 
-        
-        x_1 = (-20+30)*4*3/40 # teste de comentario
-        
+function soma(x::Int, y::Int)::Int
+    if x > 0
+        x = 0
     end
-    println(x_1)
-    x_1 = readline()
-    if (x_1 > 1) && !(x_1 < 1)
-        x_1 = 3
-    else
-        x_1 = (-20+30)*12/40
+    ret::Int = 1
+    ret = x + y
+    return ret
+end
+b::Int = 100
+a::Int = 2
+a = soma(1, 2)
+println(a)
 
 
-    end    
-    println(x_1)
-    while ((x_1 > 1) || (x_1 == 1)) 
-        x_1 = x_1 - 1
-        println(x_1)
-    end
+
+

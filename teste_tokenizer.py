@@ -1,4 +1,4 @@
-reserved_words = ["println", "if", "else", "while", "end", "readline", "Int", "String"]
+reserved_words = ["println", "if", "else", "while", "end", "readline", "Int", "String", "return", "function"]
 
 class PrePro():
     def __init__(self, source):
@@ -32,6 +32,7 @@ class Tokenizer():
     def selectNext(self):
         '''Percorre o código fonte e seleciona o próximo token'''
         flag_token = True
+        
 
         try:
             char = self.source[self.position]
@@ -174,12 +175,18 @@ class Tokenizer():
             
             
 word = """
-x::Int
-y::Int
-z::String = "oi"
-x = 1
-y = x || (1==1)
-println(x+y)
+function soma(x::Int, y::Int)::Int
+a::Int
+a = x + y
+println(a)
+return a
+end
+a::Int
+b::Int
+a = 3
+b = soma(a, 4)
+println(a)
+println(b)
 
 """
             
