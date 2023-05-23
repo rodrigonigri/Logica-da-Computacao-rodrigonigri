@@ -10,4 +10,5 @@
 
 
 # Nodes:
-![Nodes](https://github.com/rodrigonigri/Logica-da-Computacao-rodrigonigri/assets/62730936/cd442f96-64bf-49bd-8304-280d654325df)
+![Nodes](https://github.com/rodrigonigri/Logica-da-Computacao-rodrigonigri/assets/62730936/29f0749e-942b-4fff-a1d7-7e2eb201879d)
+
