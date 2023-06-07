@@ -97,8 +97,6 @@ class BinOp(Node):
                 elif self.value == "/":
                     return ("Int", self.children[0].evaluate(table)[1] // self.children[1].evaluate(table)[1])
                 
-                
-                
                 elif self.value == "||":
                     return ("Int", int(self.children[0].evaluate(table)[1] or self.children[1].evaluate(table)[1]))
                 
@@ -225,7 +223,7 @@ class FuncCall(Node):
     def __init__(self, value, children):
         super().__init__(value, children)
         
-    def evaluate(self, table): ### possivelmente errado   
+    def evaluate(self, table):   
         
         # get from func_table
         func_node = func_table.getter(self.value)
@@ -240,8 +238,9 @@ class FuncCall(Node):
         # get arguments from func_table if there are more than 0 arguments (FuncDec.children[1:n-1])
         if len(func_node.children) > 2:
             for i in range(1, len(func_node.children) - 1): # percorre os filhos do FuncDec de 1 a n-1, que são os argumentos, e cria eles na nova symbol table
-                new_symbol_table.create(func_node.children[i], func_node.children[i].evaluate(new_symbol_table))
-                new_symbol_table.setter(func_node.children[i].children[0].value, self.children[i-1].evaluate(table))
+                
+                new_symbol_table.create(func_node.children[i].children[0].value, func_node.children[i].value) #ou func_node.children[i].evaluate(new_symbol_table)
+                new_symbol_table.setter(func_node.children[i].children[0].value, self.children[i-1].evaluate(new_symbol_table)) # ou table?
                 
             #print_colored(new_symbol_table.table, "red")
             # run las child (FuncDec.children[n] which is a Block)
@@ -404,6 +403,8 @@ class Tokenizer():
                 
             self.position += 1
             self.next = Token("STRING", palavra)
+            
+            
             
 
         elif char in "0123456789":
