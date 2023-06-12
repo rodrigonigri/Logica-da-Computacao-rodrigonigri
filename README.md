@@ -1,25 +1,14 @@
 # Logica-da-Computacao-rodrigonigri
 
-# Status dos Testes:
+# Test Status:
 
 ![git status](http://3.129.230.99/svg/rodrigonigri/Logica-da-Computacao-rodrigonigri/)
 
 
-# Diagrama sintático
-![diagrama sintatico variaveis](https://user-images.githubusercontent.com/62730936/234269608-659fb2ad-6527-4c4c-bd9e-520201867220.png)
+# Syntax Diagram:
+![diagrama sintatico final](https://github.com/rodrigonigri/Logica-da-Computacao-rodrigonigri/assets/62730936/ca439454-ab78-44ba-be34-64c59080c8f6)
 
 
-# EBNF:
-```
-BLOCK = {STATEMENT};
-STATEMENT = (λ | ASSIGNMENT | PRINT), "\n";
-ASSIGNMENT = IDENTIFIER, "=", EXPRESSION;
-PRINT = "println", "(", EXPRESSION, ")";
-EXPRESSION = TERM, { ("+"|"-"), TERM };
-TERM = FACTOR, { ("*"|"/"), FACTOR };
-FACTOR = (("+"|"-") FACTOR) | NUMBER | "(", EXPRESSION, ")" | IDENTIFIER;
-IDENTIFIER = LETTER, { LETTER | DIGIT | "_" };
-NUMBER = DIGIT, {DIGIT};
-LETTER = (a | b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z | A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U | V | W | X | Y | Z )
-DIGIT = ( 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 );
-```
+# Nodes:
+![nodes final](https://github.com/rodrigonigri/Logica-da-Computacao-rodrigonigri/assets/62730936/ce8e18da-0f87-494d-abea-8a2de3e08ca6)
+
