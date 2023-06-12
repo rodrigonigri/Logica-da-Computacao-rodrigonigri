@@ -6,9 +6,9 @@
 
 
 # Syntax Diagram:
-![diagrama sintatico final](https://github.com/rodrigonigri/Logica-da-Computacao-rodrigonigri/assets/62730936/7de6ba93-68c5-4492-bfe2-fe2638414977)
+![diagrama sintatico final](https://github.com/rodrigonigri/Logica-da-Computacao-rodrigonigri/assets/62730936/ca439454-ab78-44ba-be34-64c59080c8f6)
 
 
 # Nodes:
-![nodes final](https://github.com/rodrigonigri/Logica-da-Computacao-rodrigonigri/assets/62730936/0e4c8604-ab29-477d-9d8f-350edcda47a2)
+![nodes final](https://github.com/rodrigonigri/Logica-da-Computacao-rodrigonigri/assets/62730936/ce8e18da-0f87-494d-abea-8a2de3e08ca6)
 
