@@ -240,7 +240,7 @@ class FuncCall(Node):
             for i in range(1, len(func_node.children) - 1): # percorre os filhos do FuncDec de 1 a n-1, que são os argumentos, e cria eles na nova symbol table
                 
                 new_symbol_table.create(func_node.children[i].children[0].value, func_node.children[i].value) #ou func_node.children[i].evaluate(new_symbol_table)
-                new_symbol_table.setter(func_node.children[i].children[0].value, self.children[i-1].evaluate(new_symbol_table)) # ou table?
+                new_symbol_table.setter(func_node.children[i].children[0].value, self.children[i-1].evaluate(table)) # ou table?
                 
             #print_colored(new_symbol_table.table, "red")
             # run las child (FuncDec.children[n] which is a Block)
